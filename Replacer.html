@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Date transformer</title>
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: slategray;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        #customFileLabel {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #007BFF;
+            color: white;
+            border: 2px solid black;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+
+        #fileName {
+            font-style: italic;
+            color: white;
+        }
+
+        button {
+            padding: 0.6em 2em;
+            border: none;
+            outline: none;
+            color: rgb(255, 255, 255);
+            background: #111;
+            cursor: pointer;
+            position: relative;
+            z-index: 0;
+            border-radius: 10px;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+
+        button:before {
+            content: "";
+            background: linear-gradient(45deg,
+                    #ff0000,
+                    #ff7300,
+                    #fffb00,
+                    #48ff00,
+                    #00ffd5,
+                    #002bff,
+                    #7a00ff,
+                    #ff00c8,
+                    #ff0000);
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            background-size: 400%;
+            z-index: -1;
+            filter: blur(5px);
+            -webkit-filter: blur(5px);
+            width: calc(100% + 4px);
+            height: calc(100% + 4px);
+            animation: glowing-button-85 20s linear infinite;
+            transition: opacity 0.3s ease-in-out;
+            border-radius: 10px;
+        }
+
+        @keyframes glowing-button-85 {
+            0% {
+                background-position: 0 0;
+            }
+
+            50% {
+                background-position: 400% 0;
+            }
+
+            100% {
+                background-position: 0 0;
+            }
+        }
+
+        button:after {
+            z-index: -1;
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: #222;
+            left: 0;
+            top: 0;
+            border-radius: 10px;
+        }
+
+        button[disabled] {
+            color: gray;
+        }
+
+        button[disabled]:before {
+            background: none;
+            animation: none;
+        }
+
+        button[disabled]:before {
+            background: none;
+            animation: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <input type="file" id="fileInput" accept=".txt,.csv" />
+        
+        <label id="customFileLabel" for="fileInput">Choose File</label>
+        <span id="fileName">No file selected</span>
+    </div>
+    <br><br>
+    <button id="processBtn" class="button-85" disabled>Process File</button>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const processBtn = document.getElementById('processBtn');
+        const fileNameSpan = document.getElementById('fileName');
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                fileNameSpan.textContent = fileInput.files[0].name;
+                processBtn.disabled = false;
+            } else {
+                fileNameSpan.textContent = 'No file selected';
+                processBtn.disabled = true;
+            }
+        });
+
+        processBtn.addEventListener('click', () => {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+
+            reader.onload = function (event) {
+                let content = event.target.result;
+
+                const dateRegex = /\b(\d+)-(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-(\d{2})\b/g;
+                content = content.replace(dateRegex, (_, day, month, year) => {
+                    return `${day}-${month.toLowerCase()}-${year}`;
+                });
+
+                const originalName = file.name;
+                const extensionMatch = originalName.match(/\.[^/.]+$/);
+                const extension = extensionMatch ? extensionMatch[0] : '.txt';
+
+                const blob = new Blob([content], { type: file.type || 'text/plain' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = originalName.replace(/\.[^/.]+$/, '') + '_modified' + extension;
+                link.click();
+            };
+
+            reader.readAsText(file);
+        });
+    </script>
+</body>
+
+</html>
