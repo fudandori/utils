@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Date transformer</title>
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: slategray;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        #customFileLabel {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #007BFF;
+            color: white;
+            border: 2px solid black;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+
+        #fileName {
+            font-style: italic;
+            color: white;
+        }
+
+        button {
+            padding: 8px 16px;
+            background-color: #007BFF;
+            color: white;
+            border: 2px solid black;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        button[disabled] {
+            color: black;
+            background-color: gray;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+
+<body>
+    <div style="margin-left: 40%;">
+        <div>
+            <input type="file" id="fileInput" accept=".txt,.csv" />
+
+            <label id="customFileLabel" for="fileInput">Choose File</label>
+            <span id="fileName">No file selected</span>
+        </div>
+        <br><br>
+        <button id="processBtn" class="button-85" disabled>Process File</button>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const processBtn = document.getElementById('processBtn');
+        const fileNameSpan = document.getElementById('fileName');
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                fileNameSpan.textContent = fileInput.files[0].name;
+                processBtn.disabled = false;
+            } else {
+                fileNameSpan.textContent = 'No file selected';
+                processBtn.disabled = true;
+            }
+        });
+
+        processBtn.addEventListener('click', () => {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+
+            reader.onload = function (event) {
+                let content = event.target.result;
+
+                const dateRegex = /\b(\d+)-(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)-(\d{2})\b/g;
+                content = content.replace(dateRegex, (_, day, month, year) => {
+                    return `${day}-${month.toLowerCase()}-${year}`;
+                });
+
+                const originalName = file.name;
+                const extensionMatch = originalName.match(/\.[^/.]+$/);
+                const extension = extensionMatch ? extensionMatch[0] : '.txt';
+
+                const blob = new Blob([content], { type: file.type || 'text/plain' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = originalName.replace(/\.[^/.]+$/, '') + '_modified' + extension;
+                link.click();
+            };
+
+            reader.readAsText(file);
+        });
+    </script>
+</body>
+
+</html>
